@@ -20,12 +20,6 @@ type apiConfig struct {
 
 func main() {
 
-	// feed, err := urlToFeed("https://wagslane.dev/index.xml")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// fmt.Println(feed)
-
 	godotenv.Load(".env")
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -48,13 +42,13 @@ func main() {
 		DB: dbQueries,
 	}
 
-	go startScraping(dbQueries, 10, 10*time.Second)
+	go startScraping(dbQueries, 10, 10*time.Minute)
 
 	router := chi.NewRouter()
 
 	router.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"*"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: false,
@@ -75,6 +69,8 @@ func main() {
 	v1Router.Get("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerGetFeedFollows))
 	v1Router.Post("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerCreateFeedFollow))
 	v1Router.Delete("/feed_follows/{feedFollowID}", apiCfg.middlewareAuth(apiCfg.handlerDeleteFeedFollow))
+
+	v1Router.Get("/posts", apiCfg.middlewareAuth(apiCfg.handlerGetPostsForUser))
 
 	router.Mount("/v1", v1Router)
 
