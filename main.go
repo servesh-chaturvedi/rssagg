@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
@@ -18,6 +19,13 @@ type apiConfig struct {
 }
 
 func main() {
+
+	// feed, err := urlToFeed("https://wagslane.dev/index.xml")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// fmt.Println(feed)
+
 	godotenv.Load(".env")
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -34,9 +42,13 @@ func main() {
 		log.Fatal("Can't connect to database:", err)
 	}
 
-	apiCfg := &apiConfig{
-		DB: database.New(conn),
+	dbQueries := database.New(conn)
+
+	apiCfg := apiConfig{
+		DB: dbQueries,
 	}
+
+	go startScraping(dbQueries, 10, 10*time.Second)
 
 	router := chi.NewRouter()
 
